@@ -66,6 +66,70 @@ NEXT_PUBLIC_APP_URL=https://你的域名
 
 4. 构建命令保持默认 `npm run build` 即可。
 
+### 自定义域名接入
+
+如果你的用户包含中国大陆访问者，优先不要直接使用 `*.vercel.app` 域名，对外应绑定自定义域名。
+
+推荐策略：
+
+- 主域名使用 `www.example.com`
+- 顶级域名 `example.com` 301 跳转到 `www.example.com`
+- 在 Vercel 项目里同时添加 `example.com` 和 `www.example.com`
+
+按 Vercel 官方文档，配置方式如下：
+
+- 顶级域名（apex domain）通常使用 `A` 记录
+- 子域名（例如 `www`）通常使用 `CNAME` 记录
+
+在 Vercel 控制台操作：
+
+1. 打开项目 `Settings -> Domains`
+2. 添加 `example.com`
+3. 再添加 `www.example.com`
+4. 按界面提示去域名 DNS 提供商配置解析记录
+5. 在 Vercel 中把主访问地址设置为 `www.example.com`
+6. 把 `NEXT_PUBLIC_APP_URL` 改成你的正式域名，例如：
+
+```text
+NEXT_PUBLIC_APP_URL=https://www.example.com
+```
+
+CLI 参考命令：
+
+```bash
+vercel domains add example.com meal-decider-web
+vercel domains add www.example.com meal-decider-web
+vercel domains inspect example.com
+vercel domains inspect www.example.com
+```
+
+当前仓库已新增：
+
+- `vercel.json`
+- 默认函数区域 `hnd1`（东京）
+
+这不会改变静态资源的全球 CDN 分发，但能把需要计算的动态请求更靠近东亚。
+
+### 中国大陆访问优化清单
+
+截至 **2026 年 3 月 25 日**，Vercel 官方仍说明大陆访问 `vercel.app` 站点可能出现性能下降或无法访问，因此建议按下面清单处理：
+
+1. 使用自定义域名，不直接对外暴露 `*.vercel.app`
+2. 主域名固定为 `www`，减少不同入口的证书与缓存混用问题
+3. 保持站点静态资源尽量本地化，避免运行时依赖海外第三方域名
+4. 保持 `NEXT_PUBLIC_APP_URL` 与正式域名一致，避免 sitemap / robots / metadata 指向错误
+5. 部署后从中国大陆网络实测：
+   - 首页是否首屏可打开
+   - `/api/health` 是否可访问
+   - Excel 模板下载和导出是否正常
+6. 如果大陆访问仍不稳定，再考虑单独做镜像或大陆可达前置层
+
+本项目当前状态：
+
+- 前端运行时无外部 API 依赖
+- 使用 `next/font/google`，字体会在构建时自托管，不是运行时请求 Google
+- 主要数据存储在浏览器 IndexedDB，本身不依赖跨境数据库
+
 ### Docker 部署
 
 构建镜像：
